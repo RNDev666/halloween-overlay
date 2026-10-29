@@ -4,8 +4,9 @@
 <head>
   <meta charset=utf8>
   <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="icon" href="data:,">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="./tt-halloween-boot.js?v=1" defer data-lab></script>
+  <script src="./tt-halloween-boot.js?v=1" defer data-lab="open"></script>
   <style>
     :root {
       color-scheme: light;
@@ -473,27 +474,27 @@
       ["Ale tsores vos ikh hob oyf mayn hartsn, zoln oysgeyn tsu zayn kop.", "All the troubles on my heart should land on his head."],
       ["Zolst esn tsibele mit knobl, un zolst es gornit derfiln.", "May you eat onions with garlic and taste none of it."]
     ];
-    const $ = id => document.getElementById(id);
+    const byId = id => document.getElementById(id);
     let n = 17, last = -1;
     function serve() {
       let i; do { i = Math.floor(Math.random() * curses.length) } while (i === last && curses.length > 1);
       last = i; n++;
-      $("num").textContent = "No. " + n;
-      $("tag").textContent = n === 18 ? "Today's special · 18 is chai, for luck" : "Order up";
-      for (const id of ["yid", "eng"]) { const el = $(id); el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap") }
-      $("yid").textContent = curses[i][0];
-      $("eng").textContent = curses[i][1];
-      $("toast").textContent = "";
+      byId("num").textContent = "No. " + n;
+      byId("tag").textContent = n === 18 ? "Today's special · 18 is chai, for luck" : "Order up";
+      for (const id of ["yid", "eng"]) { const el = byId(id); el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap") }
+      byId("yid").textContent = curses[i][0];
+      byId("eng").textContent = curses[i][1];
+      byId("toast").textContent = "";
     }
-    $("next").addEventListener("click", serve);
-    $("copy").addEventListener("click", () => {
-      const t = $("yid").textContent + "\n" + $("eng").textContent;
+    byId("next").addEventListener("click", serve);
+    byId("copy").addEventListener("click", () => {
+      const t = byId("yid").textContent + "\n" + byId("eng").textContent;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(t).then(() => $("toast").textContent = "Copied. Use responsibly.",
+        navigator.clipboard.writeText(t).then(() => byId("toast").textContent = "Copied. Use responsibly.",
           () => { selectText(); });
       } else selectText();
     });
-    function selectText() { const r = document.createRange(); r.selectNodeContents($("eng")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("toast").textContent = "Selected. Press copy."; }
+    function selectText() { const r = document.createRange(); r.selectNodeContents(byId("eng")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); byId("toast").textContent = "Selected. Press copy."; }
     serve();
   </script>
   <script>

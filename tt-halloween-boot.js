@@ -13,7 +13,7 @@
  *   data-theme="light|dark"   force the creatures' theme instead
  *   data-sound="off"          no sounds (they only ever play when a creature is clicked)
  *   data-end="2026-11-01"     the day they stop coming, in the visitor's own time (default below)
- *   data-lab                  allow the creature lab with #spooky-lab
+ *   data-lab                  allow the creature lab with #spooky-lab (data-lab="open": show it on every page view)
  *
  * Delete the line and the creatures are gone from the next page view on. (ON below works too, but only once browsers
  * fetch this file again.) Waits until the page has finished loading (at most a second more), then runs
@@ -23,7 +23,7 @@
 	'use strict';
 	var ON = true;                               // false: no creatures for anyone, from the next page view on
 	var SOUND = true;                            // false: the creatures make no sound, whatever data-sound says
-	var VERSION = '4';                           // = ?v of tt-halloween.js below: bump it on every change of that file
+	var VERSION = '5';                          // = ?v of tt-halloween.js below: bump it on every change of that file
 	var END = new Date(2026, 10, 1).getTime();   // 1 November 2026, 00:00, in the visitor's own time
 	var KEY = 'tth.code';
 	var me = document.currentScript;
@@ -41,6 +41,7 @@
 		end: END, v: VERSION,
 		sound: SOUND && attr('sound') !== 'off',
 		lab: !!(me && me.hasAttribute('data-lab')),
+		labOpen: attr('lab') === 'open',
 		site: attr('site') || '',
 		theme: attr('theme') || '',
 	};

@@ -12,7 +12,8 @@
  * reach in, nothing here leaks out, and the layer lets every click through except on a creature. Between
  * encounters nothing runs at all: the animation loop stops itself when the stage is empty.
  *
- * With data-lab on the boot tag, #spooky-lab opens the creature lab (summon any creature, force a jump scare).
+ * With data-lab on the boot tag, #spooky-lab opens the creature lab (summon any creature, force a jump scare);
+ * data-lab="open" shows it on every page view.
  */
 (function () {
 'use strict';
@@ -2237,7 +2238,7 @@ function lab() {
 		else if (a === 'clear') for (const c of live) { live.delete(c); c.el.remove(); c.cleanup && c.cleanup(); }
 	});
 }
-const labHash = () => { if (location.hash === '#spooky-lab') lab(); };
+const labHash = () => { if (CFG.labOpen || location.hash === '#spooky-lab') lab(); };
 addEventListener('hashchange', labHash);
 
 /* ------------------------------------------------------------------------------------------------ go */
