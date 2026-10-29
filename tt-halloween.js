@@ -94,11 +94,11 @@ const SWAT = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http:/
 	+ '<path d="M5.8 10h8.4M10 5.8v8.4M7.2 7.2l5.6 5.6M12.8 7.2l-5.6 5.6" stroke="#1a0b00" stroke-opacity=".5" stroke-width=".9"/></svg>') + '") 10 10, crosshair';
 
 addCSS(`
-:host{all:initial;--rim:rgba(205,190,255,.42);--thread:rgba(232,232,255,.6);--ui-bg:rgba(21,16,29,.95);--ui-tx:#efe9f7;--ui-mute:#a69bb8;
+:host{all:initial;--rim:rgba(205,190,255,.42);--thread:rgba(232,232,255,.6);--ui-bg:rgba(21,16,29,.95);--ui-tx:#efe9f7;
 	--ui-line:rgba(255,255,255,.09);--ui-chip:rgba(255,255,255,.06);--orange:#ff8a1f;--purple:#a78bfa;
 	font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ui-tx)}
 :host([data-theme=light]){--rim:rgba(25,15,45,.3);--thread:rgba(45,40,70,.5);--ui-bg:rgba(255,255,255,.97);--ui-tx:#1e1a2a;
-	--ui-mute:#6b6479;--ui-line:rgba(25,15,45,.1);--ui-chip:rgba(25,15,45,.05)}
+	--ui-line:rgba(25,15,45,.1);--ui-chip:rgba(25,15,45,.05)}
 .defs{position:absolute;width:0;height:0}
 .stage,.fx,.scare{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .c{position:absolute;left:0;top:0;will-change:transform;pointer-events:none;transform:translate3d(-999px,-999px,0)}
@@ -2188,14 +2188,14 @@ addEventListener('keydown', e => {
 	}
 }, { passive: true });
 
-/* ------------------------------------------------------------------------------------------------ the lab (moderators) */
+/* ------------------------------------------------------------------------------------------------ the debug panel */
 
 addCSS(`
 .lab{position:absolute;left:12px;bottom:12px;width:250px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;
 	pointer-events:auto;padding:10px 10px 9px;border-radius:12px;background:var(--ui-bg);color:var(--ui-tx);border:1px solid var(--ui-line);
 	box-shadow:0 14px 40px rgba(0,0,0,.42);font:12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 .lab-hd{display:flex;align-items:center;gap:6px;margin:0 0 8px}
-.lab-hd b{flex:1;font:400 19px/1 Creepster,Impact,fantasy;letter-spacing:.04em;color:var(--orange)}
+.lab-hd b{flex:1;font-weight:600}
 .lab button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--ui-line);background:var(--ui-chip);border-radius:8px;padding:5px 7px;text-align:left}
 .lab button:hover{border-color:var(--orange)}
 .lab button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
@@ -2204,7 +2204,6 @@ addCSS(`
 .lab-row{display:flex;gap:4px;margin-top:6px}
 .lab-row button{flex:1;text-align:center}
 .lab button[aria-pressed=true]{border-color:var(--orange);background:rgba(255,138,31,.16)}
-.lab p{margin:8px 0 0;color:var(--ui-mute);font-size:11px}
 .lab.min{width:auto}
 .lab.min .lab-hd{margin:0}
 .lab.min>:not(.lab-hd){display:none}
@@ -2215,16 +2214,14 @@ function labSync() {
 }
 function lab() {
 	if (!CFG.lab || ui.querySelector('.lab')) return;
-	wantFont();
 	const box = el('div', 'lab', ui);
 	box.setAttribute('role', 'dialog');
-	box.setAttribute('aria-label', 'Creature lab');
-	box.innerHTML = '<div class="lab-hd"><b>Creature lab</b><button class="hb" data-a="min" aria-label="Fold the lab away" aria-expanded="true">&minus;</button>'
+	box.setAttribute('aria-label', 'Debug panel');
+	box.innerHTML = '<div class="lab-hd"><b>Debug</b><button class="hb" data-a="min" aria-label="Fold the lab away" aria-expanded="true">&minus;</button>'
 		+ '<button class="hb" data-a="close" aria-label="Close the lab">&times;</button></div>'
 		+ '<div class="lab-grid">' + Object.keys(KINDS).map(k => '<button data-k="' + k + '">' + KINDS[k].name + '</button>').join('') + '</div>'
 		+ '<div class="lab-row"><button data-a="scare" aria-pressed="false">Next hit scares</button><button data-a="crowd">Quiet-spell watchers</button></div>'
-		+ '<div class="lab-row"><button data-a="frenzy">Frenzy</button><button data-a="clear">Clear the screen</button></div>'
-		+ '<p>Moderators only. Visitors get a creature 2&ndash;5 s after every page load, then about one every 50 s while they stay; a visitor\'s first hits always banish, after that a jump scare can come at most every 2&frac12; minutes.</p>';
+		+ '<div class="lab-row"><button data-a="frenzy">Frenzy</button><button data-a="clear">Clear the screen</button></div>';
 	box.addEventListener('click', e => {
 		const b = e.target.closest('button');
 		if (!b) return;
