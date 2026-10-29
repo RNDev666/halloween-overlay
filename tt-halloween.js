@@ -42,11 +42,21 @@ const n1 = v => Math.round(v * 10) / 10;        // short numbers in SVG attribut
 let uidN = 0;
 const uid = p => 'tth-' + p + (++uidN);
 
+// window.__tthStop() takes everything down again: every listener on the page goes through on(), so one abort
+// removes them all; timers, observers and the rest are listed in stop() at the end
+const halt = new AbortController();
+const on = (target, type, f, o) => target.addEventListener(type, f, Object.assign({ signal: halt.signal }, o === true ? { capture: true } : o));
+
 // localStorage keeps a few counters across visits (the cat's lives, when the last jump scare was), sessionStorage
-// the encounter timing across pages
+// the encounter timing across pages. Where there is no storage (Discord deletes it) they live in memory instead,
+// for as long as the page does.
+const mem = window.__tthMem || (window.__tthMem = {});
 const store = (area, prefix) => ({
-	get(k, d) { try { const v = area().getItem(prefix + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-	set(k, v) { try { area().setItem(prefix + k, JSON.stringify(v)); } catch (e) {} },
+	get(k, d) {
+		try { const v = area().getItem(prefix + k); return v === null ? d : JSON.parse(v); }
+		catch (e) { return prefix + k in mem ? mem[prefix + k] : d; }
+	},
+	set(k, v) { try { area().setItem(prefix + k, JSON.stringify(v)); } catch (e) { mem[prefix + k] = v; } },
 });
 const keep = store(() => localStorage, 'tth.');
 const sess = store(() => sessionStorage, 'tth.');
@@ -124,11 +134,13 @@ addDefs(`
 
 // Light or dark, followed live. data-theme on the boot tag forces one; data-site follows that site's own switch: TT
 // html[data-theme] (dark by default), TD html.theme-dark (light by default), IPT body.Brtness = the White theme (dark
-// by default). Any other page: its html[data-theme] if it has one, else how bright its background actually is.
+// by default), Discord .theme-light on html or body (dark by default). Any other page: its html[data-theme] if it
+// has one, else how bright its background actually is.
 const SITE = CFG.site;
 function themeNow() {
 	if (CFG.theme === 'light' || CFG.theme === 'dark') return CFG.theme;
 	if (SITE === 'td') return html.classList.contains('theme-dark') ? 'dark' : 'light';
+	if (SITE === 'discord') return html.classList.contains('theme-light') || doc.body.classList.contains('theme-light') ? 'light' : 'dark';
 	if (SITE === 'ipt') return doc.body.classList.contains('Brtness') ? 'light' : 'dark';
 	const t = html.getAttribute('data-theme');
 	if (SITE === 'tt') return t === 'light' ? 'light' : 'dark';
@@ -147,10 +159,11 @@ function pageIsDark() {
 }
 function syncTheme() { host.setAttribute('data-theme', themeNow()); }
 syncTheme();
-new MutationObserver(syncTheme).observe(html, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
-new MutationObserver(syncTheme).observe(doc.body, { attributes: true, attributeFilter: ['class', 'style'] });
-if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
-addEventListener('resize', () => { W = viewW(); H = viewH(); }, { passive: true });
+const themeWatch = new MutationObserver(syncTheme);
+themeWatch.observe(html, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+themeWatch.observe(doc.body, { attributes: true, attributeFilter: ['class', 'style'] });
+if (window.matchMedia) on(matchMedia('(prefers-color-scheme: dark)'), 'change', syncTheme);
+on(window, 'resize', () => { W = viewW(); H = viewH(); }, { passive: true });
 
 // the Halloween face for the word pops and the pumpkin menu, fetched the first time something needs it
 let fontAsked = false;
@@ -186,7 +199,7 @@ function frame(ms) {
 	scrollV *= Math.max(0, 1 - 6 * dt);
 	raf = live.size || fxs.size ? requestAnimationFrame(frame) : 0;
 }
-function kick() { if (!raf) { lastMs = performance.now(); raf = requestAnimationFrame(frame); } }
+function kick() { if (!raf && !halt.signal.aborted) { lastMs = performance.now(); raf = requestAnimationFrame(frame); } }
 function enlist(c) { if (c.el) c.el.__c = c; live.add(c); kick(); return c; }
 function fx(f) { fxs.add(f); kick(); }
 
@@ -195,22 +208,22 @@ function fx(f) { fxs.add(f); kick(); }
 // the mouse (touch screens have no hover, so creatures there only react to taps)
 const P = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, on: false };
 let lastInput = performance.now(), scrollV = 0, lastScroll = scrollY;
-addEventListener('pointermove', e => {
+on(window, 'pointermove', e => {
 	if (e.pointerType === 'touch') return;
 	const t = performance.now(), dt = Math.max(8, t - P.t) / 1000;
 	P.vx = (e.clientX - P.x) / dt; P.vy = (e.clientY - P.y) / dt;
 	P.x = e.clientX; P.y = e.clientY; P.t = t; P.on = true;
 	stir();
 }, { passive: true });
-doc.addEventListener('mouseleave', () => { P.on = false; });
-addEventListener('blur', () => { P.on = false; });
-for (const ev of ['keydown', 'pointerdown', 'wheel', 'touchstart']) addEventListener(ev, stir, { passive: true, capture: true });
-addEventListener('scroll', () => { const y = scrollY; scrollV += y - lastScroll; lastScroll = y; stir(); }, { passive: true });
+on(doc, 'mouseleave', () => { P.on = false; });
+on(window, 'blur', () => { P.on = false; });
+for (const ev of ['keydown', 'pointerdown', 'wheel', 'touchstart']) on(window, ev, stir, { passive: true, capture: true });
+on(window, 'scroll', () => { const y = scrollY; scrollV += y - lastScroll; lastScroll = y; stir(); }, { passive: true });
 function pointerNear(x, y, r) { return P.on && hypot(P.x - x, P.y - y) < r; }
 // typing: a key pressed in the last 4 s while a text field has the focus (a field that merely kept the focus, like
 // the search box after a search, does not count)
 let lastKey = -1e9;
-addEventListener('keydown', () => { lastKey = performance.now(); }, { passive: true, capture: true });
+on(window, 'keydown', () => { lastKey = performance.now(); }, { passive: true, capture: true });
 function typing() {
 	const a = doc.activeElement;
 	if (!a || performance.now() - lastKey > 4000) return false;
@@ -2096,10 +2109,10 @@ function onHit(e) {
 }
 stage.addEventListener('pointerdown', onHit);
 stage.addEventListener('click', onHit);
-addEventListener('click', e => {
+on(window, 'click', e => {
 	if (swallow && performance.now() - swallow < 800) { swallow = 0; e.preventDefault(); e.stopPropagation(); }
 }, true);
-addEventListener('pointerdown', e => { if (swallow && performance.now() - swallow > 50) swallow = 0; }, true);
+on(window, 'pointerdown', e => { if (swallow && performance.now() - swallow > 50) swallow = 0; }, true);
 
 /* ------------------------------------------------------------------------------------------------ who comes, and when */
 
@@ -2158,7 +2171,7 @@ function due() {
 	encounter();
 	planIn(gap());
 }
-doc.addEventListener('visibilitychange', () => { if (doc.hidden) clearTimeout(timer); else arm(); });
+on(doc, 'visibilitychange', () => { if (doc.hidden) clearTimeout(timer); else arm(); });
 
 // A long quiet spell (45 s without the mouse, keys or scrolling): eyes open at the edges and a spider creeps in,
 // all of them gone the moment the visitor stirs. At most every five minutes; not on touch screens, not for
@@ -2172,14 +2185,14 @@ function crowd() {
 	setTimeout(() => quietCrowd && new Crawler(chance(.5) ? 'widow' : 'tarantula', { creep: true }), 5000);
 	setTimeout(() => quietCrowd && new Eyes({ watch: true, side: sides[2], life: 90, color: 'r' }), 9000);
 }
-setInterval(() => {
+const crowdCheck = setInterval(() => {
 	if (REDUCED || TOUCH || doc.hidden || quietCrowd || live.size || scaring || Date.now() >= CFG.end) return;
 	if (performance.now() - lastInput > 45000 && Date.now() - keep.get('crowdAt', 0) > 300000) crowd();
 }, 5000);
 
 // typing "boo" anywhere outside a text field calls up a few ghosts
 let typed = '';
-addEventListener('keydown', e => {
+on(window, 'keydown', e => {
 	if (typing() || e.ctrlKey || e.metaKey || e.altKey || !e.key || e.key.length !== 1) return;
 	typed = (typed + e.key.toLowerCase()).slice(-3);
 	if (typed === 'boo') {
@@ -2236,16 +2249,31 @@ function lab() {
 	});
 }
 const labHash = () => { if (CFG.labOpen || location.hash === '#spooky-lab') lab(); };
-addEventListener('hashchange', labHash);
+on(window, 'hashchange', labHash);
 
-/* ------------------------------------------------------------------------------------------------ go */
+/* ------------------------------------------------------------------------------------------------ go, and stop */
 
+// (timeouts still pending inside creatures may build one more on the detached stage; kick() keeps it from moving)
+window.__tthStop = () => {
+	halt.abort();
+	themeWatch.disconnect();
+	clearTimeout(timer);
+	clearInterval(crowdCheck);
+	cancelAnimationFrame(raf);
+	for (const c of live) c.cleanup && c.cleanup();
+	live.clear();
+	fxs.clear();
+	if (AC) AC.close();
+	host.remove();
+	delete window.__tthStop;
+	delete window.__tthLive;
+};
 doc.body.appendChild(host);
 labHash();
 // the first visit: 2-5 s after the page's load event (navigation timing; this script itself starts about a second
-// after it), counted from now if the browser does not say
+// after it), or after now when it starts much later (a Discord plugin switched on)
 const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-const loadedAt = nav && nav.loadEventEnd > 0 ? nav.loadEventEnd : performance.now();
+const loadedAt = nav && nav.loadEventEnd > 0 ? Math.max(nav.loadEventEnd, performance.now() - 1500) : performance.now();
 nextAt = loadedAt + rand(2000, 5000);
 arm();
 })();
