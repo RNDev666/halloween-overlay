@@ -1,0 +1,504 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset=utf8>
+  <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="./tt-halloween-boot.js?v=1" defer data-lab></script>
+  <style>
+    :root {
+      color-scheme: light;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font: 14px -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      color: #000
+    }
+
+    img {
+      max-width: 100%
+    }
+
+    [hidden]:not([hidden=until-found i]) {
+      display: none !important
+    }
+  </style>
+</head>
+
+<body>
+  <title>The Kvetch Counter</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Frank+Ruhl+Libre:wght@500;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=IBM+Plex+Mono:wght@500&display=swap">
+  <style>
+    /* Layout: a Lower East Side deli menu board — counter header, "take a number" ticket for curses, menu-priced glossary of insults */
+    :root {
+      --paper: #f3ead6;
+      --ink: #2b1d12;
+      --rye: #7a4a24;
+      --pickle: #3f6b2e;
+      --mustard: #d9a21b;
+      --line: #d8c7a3;
+      --card: #fbf5e7;
+      --display: "Bagel Fat One", "Cooper Black", Georgia, serif;
+      --body: "Literata", Georgia, serif;
+      --heb: "Frank Ruhl Libre", "Times New Roman", serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    @media (prefers-color-scheme:dark) {
+      :root:not([data-theme="light"]) {
+        --paper: #1d1611;
+        --ink: #f1e5cf;
+        --rye: #d49a63;
+        --pickle: #8fbf72;
+        --mustard: #e9b93a;
+        --line: #3d3026;
+        --card: #271e17;
+        color-scheme: dark
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --paper: #1d1611;
+      --ink: #f1e5cf;
+      --rye: #d49a63;
+      --pickle: #8fbf72;
+      --mustard: #e9b93a;
+      --line: #3d3026;
+      --card: #271e17;
+      color-scheme: dark
+    }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font: 400 1.05rem/1.6 var(--body);
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px))
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-block: 40px 64px;
+      display: grid;
+      gap: 56px
+    }
+
+    h1,
+    h2 {
+      font-family: var(--display);
+      font-weight: 400;
+      line-height: 1.05;
+      text-wrap: balance;
+      margin: 0
+    }
+
+    .eyebrow {
+      font: 500 .75rem/1 var(--mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--rye)
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      border-bottom: 4px double var(--rye);
+      padding-bottom: 24px
+    }
+
+    header h1 {
+      font-size: clamp(2.6rem, 8vw, 5.2rem);
+      color: var(--pickle)
+    }
+
+    header h1 span {
+      color: var(--mustard)
+    }
+
+    header p {
+      margin: 12px 0 0;
+      max-width: 52ch
+    }
+
+    .heb {
+      font-family: var(--heb);
+      font-weight: 800;
+      font-size: clamp(3rem, 10vw, 6rem);
+      color: var(--rye);
+      line-height: .9;
+      direction: rtl
+    }
+
+    /* ticket */
+    .counter {
+      display: grid;
+      grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+      gap: 28px;
+      align-items: start
+    }
+
+    .ticket {
+      background: var(--mustard);
+      color: #2b1d12;
+      padding: 20px;
+      text-align: center;
+      border-radius: 6px;
+      mask: radial-gradient(circle 9px at 0 50%, #0000 98%, #000) left/51% 100% no-repeat, radial-gradient(circle 9px at 100% 50%, #0000 98%, #000) right/51% 100% no-repeat
+    }
+
+    .ticket .eyebrow {
+      color: #2b1d12
+    }
+
+    .num {
+      font: 400 4.2rem/1 var(--display);
+      margin: 8px 0 14px;
+      font-variant-numeric: tabular-nums
+    }
+
+    button {
+      font: 600 1rem var(--body);
+      cursor: pointer;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: transparent;
+      color: inherit
+    }
+
+    .ticket button {
+      background: #2b1d12;
+      color: #f3ead6;
+      border-color: #2b1d12;
+      width: 100%
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--pickle);
+      outline-offset: 3px
+    }
+
+    .order {
+      min-width: 0
+    }
+
+    .order h2 {
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      margin: 6px 0 14px
+    }
+
+    .yid {
+      font: italic 1.25rem/1.45 var(--body);
+      color: var(--pickle);
+      margin: 0 0 10px
+    }
+
+    .eng {
+      font-size: 1.3rem;
+      line-height: 1.45;
+      margin: 0 0 18px
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .toast {
+      font: 500 .8rem var(--mono);
+      color: var(--rye)
+    }
+
+    .swap {
+      animation: pop .35s ease
+    }
+
+    @keyframes pop {
+      from {
+        transform: translateY(6px);
+        opacity: .3
+      }
+
+      to {
+        transform: none;
+        opacity: 1
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .swap {
+        animation: none
+      }
+    }
+
+    /* menu */
+    .menu-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px
+    }
+
+    .menu-head h2 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      color: var(--rye)
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: 4px 40px;
+      list-style: none;
+      margin: 0;
+      padding: 0
+    }
+
+    .item {
+      padding: 14px 0;
+      border-bottom: 1px dashed var(--line);
+      min-width: 0
+    }
+
+    .item-top {
+      display: flex;
+      align-items: baseline;
+      gap: 8px
+    }
+
+    .item-top b {
+      font: 600 1.15rem var(--body)
+    }
+
+    .dots {
+      flex: 1;
+      border-bottom: 2px dotted var(--line);
+      transform: translateY(-4px)
+    }
+
+    .item-top .h {
+      font: 500 1.2rem var(--heb);
+      color: var(--rye);
+      direction: rtl
+    }
+
+    .item p {
+      margin: 4px 0 0;
+      font-size: .95rem
+    }
+
+    .item em {
+      color: var(--pickle)
+    }
+
+    .note {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 20px 24px;
+      font-size: .95rem;
+      max-width: 70ch
+    }
+
+    .note b {
+      font-family: var(--display);
+      font-weight: 400;
+      color: var(--pickle);
+      font-size: 1.15rem
+    }
+
+    footer {
+      font: 500 .8rem var(--mono);
+      color: var(--rye);
+      text-align: center
+    }
+
+    @media (max-width:640px) {
+      header {
+        grid-template-columns: 1fr
+      }
+
+      .heb {
+        order: -1
+      }
+
+      .counter {
+        grid-template-columns: 1fr
+      }
+
+      .ticket {
+        max-width: 260px
+      }
+    }
+  </style>
+
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="eyebrow">Est. Orchard St. · Fresh klolos daily</div>
+        <h1>The Kvetch <span>Counter</span></h1>
+        <p>A Yiddish curse is a small work of architecture: it starts with a blessing, builds you a hundred houses, and
+          then sets them on fire. Take a number and get served.</p>
+      </div>
+      <div class="heb" lang="yi" aria-label="klolos, curses">קללות</div>
+    </header>
+
+    <section class="counter" aria-labelledby="order-title">
+      <div class="ticket">
+        <div class="eyebrow">Now serving</div>
+        <div class="num" id="num">No. 18</div>
+        <button id="next" type="button">Take a number</button>
+      </div>
+      <div class="order" aria-live="polite">
+        <div class="eyebrow" id="tag">Today's special</div>
+        <h2 id="order-title">Your klole, hot off the slicer</h2>
+        <p class="yid" id="yid" lang="yi-Latn"></p>
+        <p class="eng" id="eng"></p>
+        <div class="order-actions">
+          <button id="copy" type="button">Copy curse</button>
+          <span class="toast" id="toast" role="status"></span>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="menu-title">
+      <div class="menu-head">
+        <h2 id="menu-title">The Insult Menu</h2>
+        <span class="eyebrow">Served by the pound · No substitutions</span>
+      </div>
+      <ul class="menu">
+        <li class="item">
+          <div class="item-top"><b>Shlemiel</b><span class="dots"></span><span class="h" lang="yi">שלעמיל</span></div>
+          <p>The clumsy one who spills the soup. <em>“A shlemiel falls on his back and breaks his nose.”</em></p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Shlimazl</b><span class="dots"></span><span class="h" lang="yi">שלימזל</span></div>
+          <p>The unlucky one the soup lands on. Never stand next to a shlemiel.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Nudnik</b><span class="dots"></span><span class="h" lang="yi">נודניק</span></div>
+          <p>A pest who calls you three times about the same thing, then asks why you sound tired.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Shmendrik</b><span class="dots"></span><span class="h" lang="yi">שמענדריק</span>
+          </div>
+          <p>A nobody who thinks he's a somebody. Wears a tie to take out the garbage.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Kvetsh</b><span class="dots"></span><span class="h" lang="yi">קוועטש</span></div>
+          <p>A chronic complainer. The soup is too hot, and also there isn't enough of it.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Nebekh</b><span class="dots"></span><span class="h" lang="yi">נעבעך</span></div>
+          <p>A sad sack. When a nebekh leaves the room, it feels like someone came in.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Ganef</b><span class="dots"></span><span class="h" lang="yi">גנב</span></div>
+          <p>A thief, or a charming crook. Also said fondly of a grandchild who steals the last rugelach.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Shnorer</b><span class="dots"></span><span class="h" lang="yi">שנאָרער</span></div>
+          <p>A freeloader who arrives empty-handed and leaves with the leftovers and your Tupperware.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Khazer</b><span class="dots"></span><span class="h" lang="yi">חזיר</span></div>
+          <p>Literally “pig.” A glutton who takes four pieces of brisket “to be polite.”</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Klots</b><span class="dots"></span><span class="h" lang="yi">קלאָץ</span></div>
+          <p>A block of wood. Clumsy in body and in conversation.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Meshugener</b><span class="dots"></span><span class="h" lang="yi">משוגענער</span>
+          </div>
+          <p>A crazy person. Usually your uncle, usually about the parking.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Trombenik</b><span class="dots"></span><span class="h" lang="yi">טראָמבעניק</span>
+          </div>
+          <p>A blowhard. All trumpet, no tune.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Shmegegge</b><span class="dots"></span><span class="h">—</span></div>
+          <p>A drip, a nothing, and also the nonsense he talks. Pure American Yiddish.</p>
+        </li>
+        <li class="item">
+          <div class="item-top"><b>Farbisener</b><span class="dots"></span><span class="h" lang="yi">פֿאַרביסענער</span>
+          </div>
+          <p>A sourpuss. Looks like he bit into a lemon in 1974 and never recovered.</p>
+        </li>
+      </ul>
+    </section>
+
+    <aside class="note">
+      <b>How to serve a klole.</b> Deliver it deadpan, ideally while handing someone a plate. The art is in the setup:
+      the longer the blessing, the harder the landing. Most of these were never meant literally. They were how people
+      who had very little control over their lives got the last word.
+    </aside>
+
+    <footer>Ticket numbers are for entertainment only · Complaints go to the kvetsh at the end of the line</footer>
+  </div>
+
+  <script>
+    const curses = [
+      ["Zolst vaksn vi a tsibele, mitn kop in dr'erd.", "May you grow like an onion, with your head in the ground."],
+      ["Ale tseyn zoln dir aroysfaln, nor eyner zol dir blaybn oyf tsonveytik.", "May all your teeth fall out except one, and that one should give you a toothache."],
+      ["Zolst hobn hundert hayzer, in yedn hoyz hundert tsimern, in yedn tsimer tsvantsik betn, un a kadokhes zol dikh varfn fun eyn bet in der tsveyter.", "May you have a hundred houses, each with a hundred rooms, each room with twenty beds, and may a fever toss you from bed to bed."],
+      ["Zolst zayn vi a henglayhter: bay tog zolstu hengen, un bay nakht zolstu brenen.", "May you be like a chandelier: hang by day and burn by night."],
+      ["Zol dir vaksn a tsibele in pupik.", "May an onion grow in your belly button."],
+      ["Gey kakn oyfn yam.", "Go do your business in the ocean."],
+      ["Zolst lign in dr'erd un bakn beygl.", "May you lie in the ground and bake bagels."],
+      ["Got zol dir gebn a sakh gelt, un du zolst es ales farkrenken.", "May God give you lots of money, and may you spend every cent of it on doctors."],
+      ["Zolst hobn a gesheft mit shroyre: vos du host, zol men nit veln, un vos men vil, zolstu nit hobn.", "May you own a big store, where whatever you have nobody wants, and whatever they want you don't have."],
+      ["Ale tsores vos ikh hob oyf mayn hartsn, zoln oysgeyn tsu zayn kop.", "All the troubles on my heart should land on his head."],
+      ["Zolst esn tsibele mit knobl, un zolst es gornit derfiln.", "May you eat onions with garlic and taste none of it."]
+    ];
+    const $ = id => document.getElementById(id);
+    let n = 17, last = -1;
+    function serve() {
+      let i; do { i = Math.floor(Math.random() * curses.length) } while (i === last && curses.length > 1);
+      last = i; n++;
+      $("num").textContent = "No. " + n;
+      $("tag").textContent = n === 18 ? "Today's special · 18 is chai, for luck" : "Order up";
+      for (const id of ["yid", "eng"]) { const el = $(id); el.classList.remove("swap"); void el.offsetWidth; el.classList.add("swap") }
+      $("yid").textContent = curses[i][0];
+      $("eng").textContent = curses[i][1];
+      $("toast").textContent = "";
+    }
+    $("next").addEventListener("click", serve);
+    $("copy").addEventListener("click", () => {
+      const t = $("yid").textContent + "\n" + $("eng").textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(() => $("toast").textContent = "Copied. Use responsibly.",
+          () => { selectText(); });
+      } else selectText();
+    });
+    function selectText() { const r = document.createRange(); r.selectNodeContents($("eng")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("toast").textContent = "Selected. Press copy."; }
+    serve();
+  </script>
+  <script>
+    var Engine = { vars: { cache: { lastQuery: 0, loader: 0 } }, api: { init: function (i) { i.er && Engine.api.msg(i.er), i.Fs && $.each(i.Fs, function () { var i = (this.Lo ? _pipe : Engine).api; if (void 0 !== this.Fn && $.isFunction(i[this.Fn])) return i[this.Fn](this.Cn); $.isFunction(i[this[0]]) && i[this[0]].call(null, this[1]) }) }, msg: function (i) { alert(i) }, vpbox: function (i) { "EXIT" === i ? $.vpbox._() : $.vpbox(i) }, DOM: function (i) { var t = !1; $.each(i, function (i, e) { return t ? void (t = t[this[0]][$.isArray(this[1]) ? "apply" : "call"](t, this[1])) : (t = $(e), !0) }) }, dom: function (i) { $.each(i, function () { var i; $.isArray(this.w) ? (i = $(this.e), $.each(this.w, function () { i = "queueRemove" == this[0] ? i.queue(function () { $(this).remove() }) : "undefined" != this[2] ? i[this[0]](this[1], this[2]) : i[this[0]](this[1]) })) : "undefined" != this.x ? $(this.e)[this.w](this.d, this.x) : $(this.e)[this.w](this.d) }) }, obj: function (i) { if (i && i.map) for (var e = i.map.split("."), t = window[i.tree] || Engine, n = e.length, s = 0; s < n; s++)t = t[e[s]] = (s == n - 1 ? i.v : t[e[s]]) || (s == n - 1 ? i.v : {}) } }, API: function (i, e) { var t = void 0 !== e && 0 !== e, e = ""; if (!t && $(this).hasClass("jxi")) { if ($(this).is("select") && "change" != i.type) return; if ($(this).is("form") && "submit" != i.type) return; e = $(this).serialize(), e += $(this).data("jxi"), $(this).hasClass("rtn") || (i.preventDefault(), i.stopPropagation()), $(this).hasClass("jxiBG") || (t = !0) } else e = i; if (Engine.vars.cache.lastQuery && Engine.vars.cache.lastQuery == e) return Engine.vars.cache.lastQuery = 0; Engine.vars.cache.lastQuery = e, t && ($("#jxwait").remove(), $("body").prepend('<div id="jxwait"><div>Loading...</div></div>'), clearTimeout(Engine.vars.cache.loaderTimer), Engine.vars.cache.loaderTimer = setTimeout(function () { $("#jxwait").remove() }, 16e3)), $.ajax({ type: "POST", url: "/API.php", dataType: "json", data: e, timeout: 15e3 }).always(function () { Engine.vars.cache.lastQuery = 0, t && $("#jxwait").fadeOut(800, function () { $(this).remove() }) }).then(function (i, e, t) { return 200 != t.status ? $.Deferred().reject() : i }).done(Engine.api.init).fail(function () { t && alert("Please try again later.") }) } }; $(function () { var i = 0, e = $('<div id="jBtn"></div>').on("click", function () { 0 == $("html, body").scrollTop() && 0 < i ? $("html, body").scrollTop(i) : (i = $("html, body").scrollTop() || $("body").scrollTop(), e.addClass("bk"), $("html, body").scrollTop(0)) }); $(window).on("resize", function () { var i = $("#iptStart").offset() || 0; i && e.width(i.left - 20) }).on("scroll", function () { 400 < $(this).scrollTop() ? e.fadeIn() : 0 == i && e.fadeOut(), 0 != $(this).scrollTop() && 0 < i && (i = 0, e.removeClass("bk")) }), $(window).triggerHandler("scroll"), $(window).triggerHandler("resize"), $("body").prepend(e).on("click", ".warnSSL", function () { resize_vp($("img", this).attr("src", $(this).data("url")).trigger("load").unwrap(".warnSSL")) }).on("submit click change", ".jxi", Engine.API).on("click", ".togNext", function (i) { var e = $(this); $(i.target).is("input") && i.target == this || e.hasClass("Acc") && e.hasClass("unfolded") || (e.hasClass("Acc") && (void 0 !== e.attr("rel") && !1 !== e.attr("rel") ? $("." + e.attr("rel")) : $(".togNext", e.parent())).removeClass("unfolded").next().slideUp(500), e.toggleClass("unfolded").next().slideToggle(500), e.hasClass("remember") && Engine.elmHide(this)) }) }), jQuery.cookie = function (i, e, t) { if (void 0 === e) { var n = null; if (document.cookie && "" != document.cookie) for (var s = document.cookie.split(";"), o = 0; o < s.length; o++) { var a = jQuery.trim(s[o]); if (a.substring(0, i.length + 1) == i + "=") { n = decodeURIComponent(a.substring(i.length + 1)); break } } return n } t = t || {}, null === e && (e = "", (t = $.extend({}, t)).expires = -1); var r = ""; t.expires && ("number" == typeof t.expires || t.expires.toUTCString) && ("number" == typeof t.expires ? (d = new Date).setTime(d.getTime() + 24 * t.expires * 60 * 60 * 1e3) : d = t.expires, r = "; expires=" + d.toUTCString()); var l = t.path ? "; path=" + t.path : "", d = t.domain ? "; domain=" + t.domain : "", t = t.secure ? "; secure" : ""; document.cookie = [i, "=", encodeURIComponent(e), r, l, d, t].join("") }, function (t) { t.vpbox = function (i) { t.vpbox.__(i) }; var n = { id: "#vpbox", l: 0, int: 0 }; t.extend(t.vpbox, { pos: function () { var i = t(window).width() - t(n.id).width(), e = t(window).height() - t(n.id).height(); i + e != n.l && (n.l = i + e, t(n.id).css({ left: i / 2, top: e / 2 })) }, __: function (i) { t(n.id).length || (t('<div id="' + n.id.substring(1) + '"><div class="content"/></div>').on("click", ".xVPbox", this._).appendTo("body"), t('<div id="' + n.id.substring(1) + 'O"></div>').on("click", function () { t(this).prev().addClass("anim pop").delay(200).queue(function () { t(this).removeClass("pop").dequeue() }) }).appendTo("body")), t(n.id + " .content").html(i).parent().removeClass("anim").show().next().show(), this.pos(), n.int = setInterval(this.pos, 2e3) }, _: function () { clearInterval(n.int), t(n.id + "," + n.id + "O").fadeOut(function () { t(n.id + " .content").empty() }) } }) }($), function (s) { function o(i) { return '<div style="background-image:url(https://img.youtube.com/vi/' + i + '/hqdefault.jpg)" class="bbVid hov v' + i + '" id="' + i + '"><img src="/.gif"></div>' } s("body").on("click", ".yt", function () { s(".player .Xplayer").click(); var i = void 0 !== (i = s(this).attr("pph")) && !1 !== i && (s("." + i + "Hide").addClass("Hidden"), s("#" + i).empty().removeClass("Hidden")), e = o(this.id), t = []; s(".yt", i ? s(this).parent() : s("body")).not(this).each(function () { return -1 !== s.inArray(this.id, t) || (t.push(this.id), void (e += o(this.id))) }); var n = '<div class="player"><div class="close hov Xplayer">Close Player</div><div class="mainPlayer"><iframe allowfullscreen="true" src="https://www.youtube.com/embed/' + this.id + '?hl=en&fs=1&iv_load_policy=3&rel=0&showinfo=0&autoplay=1&vq=hd1080" frameborder="0" width="100%" height="100%" referrerpolicy="origin"></iframe></div><div class="playlist">' + e + "</div></div>"; return i ? i.append(n) : s.vpbox('<div class="box_content mwL vpboxPlayer"><img class="xclose xVPbox" src="/pic/ui/icons/vpboxX.png" />' + n + "</div>"), s(".player .bbVid").on("click", function () { return !s(this).hasClass("playing") && void s(this).siblings().addBack().removeClass("playing").filter(".v" + this.id).addClass("playing").parent().prev().children().attr("src", "https://www.youtube.com/embed/" + this.id + "?hl=en&fs=1&modestbranding=1&iv_load_policy=3&rel=0&showinfo=0&autoplay=1") }).first().addClass("playing"), !0 }).on("click", ".Xplayer", function () { var i = s(this).parent().parent(); i.hasClass("vpboxPlayer") || (s("." + i.prop("id") + "Hide").removeClass("Hidden"), i.empty().addClass("Hidden")) }) }($);
+  </script>
+</body>
+
+</html>
