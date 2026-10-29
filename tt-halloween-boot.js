@@ -5,6 +5,9 @@
  *
  *   <script src="/path/to/tt-halloween-boot.js" defer></script>
  *
+ * Served from another domain (e.g. the Vercel deployment, see vercel.json), the files need
+ * Access-Control-Allow-Origin so the localStorage copy works; without it they still load, just uncached.
+ *
  * Optional attributes on that tag:
  *   data-site="td|ipt|tt"     follow that site's own light/dark switch (other pages are detected from their background)
  *   data-theme="light|dark"   force the creatures' theme instead
