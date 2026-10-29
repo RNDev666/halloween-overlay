@@ -23,7 +23,7 @@
 	'use strict';
 	var ON = true;                               // false: no creatures for anyone, from the next page view on
 	var SOUND = true;                            // false: the creatures make no sound, whatever data-sound says
-	var VERSION = '7';                         // = ?v of tt-halloween.js below: bump it on every change of that file
+	var VERSION = '9';                         // = ?v of tt-halloween.js below: bump it on every change of that file
 	var END = new Date(2026, 10, 1).getTime();   // 1 November 2026, 00:00, in the visitor's own time
 	var KEY = 'tth.code';
 	var me = document.currentScript;

@@ -2207,7 +2207,8 @@ addCSS(`
 .lab{position:absolute;left:12px;bottom:12px;width:250px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box;
 	pointer-events:auto;padding:10px 10px 9px;border-radius:12px;background:var(--ui-bg);color:var(--ui-tx);border:1px solid var(--ui-line);
 	box-shadow:0 14px 40px rgba(0,0,0,.42);font:12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-.lab-hd{display:flex;align-items:center;gap:6px;margin:0 0 8px}
+.lab-hd{display:flex;align-items:center;gap:6px;margin:0 0 8px;cursor:grab;touch-action:none;user-select:none}
+.lab.drag .lab-hd{cursor:grabbing}
 .lab-hd b{flex:1;font-weight:600}
 .lab button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--ui-line);background:var(--ui-chip);border-radius:8px;padding:5px 7px;text-align:left}
 .lab button:hover{border-color:var(--orange)}
@@ -2241,12 +2242,36 @@ function lab() {
 		const a = b.dataset.a;
 		if (b.dataset.k) encounter(b.dataset.k);
 		else if (a === 'close') { box.remove(); if (location.hash === '#spooky-lab') history.replaceState(null, '', location.pathname + location.search); }
-		else if (a === 'min') { const m = box.classList.toggle('min'); b.innerHTML = m ? '+' : '&minus;'; b.setAttribute('aria-expanded', m ? 'false' : 'true'); }
+		else if (a === 'min') {
+			const m = box.classList.toggle('min');
+			b.innerHTML = m ? '+' : '&minus;';
+			b.setAttribute('aria-expanded', m ? 'false' : 'true');
+			if (box.style.top) { const r = box.getBoundingClientRect(); moveTo(r.left, r.top); }
+		}
 		else if (a === 'scare') { labScare = !labScare; labSync(); }
 		else if (a === 'crowd') crowd();
 		else if (a === 'frenzy') for (let i = 0; i < 4; i++) setTimeout(() => encounter(), i * 700);
 		else if (a === 'clear') for (const c of live) { live.delete(c); c.el.remove(); c.cleanup && c.cleanup(); }
 	});
+	// dragged by its header (not the buttons), kept inside the screen (also when unfolding makes it taller)
+	const moveTo = (x, y) => {
+		box.style.left = clamp(x, 0, W - box.offsetWidth) + 'px';
+		box.style.top = clamp(y, 0, H - box.offsetHeight) + 'px';
+		box.style.bottom = 'auto';
+	};
+	const hd = box.querySelector('.lab-hd');
+	let grab = null;
+	hd.addEventListener('pointerdown', e => {
+		if (e.button || e.target.closest('button')) return;
+		const r = box.getBoundingClientRect();
+		grab = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+		hd.setPointerCapture(e.pointerId);
+		box.classList.add('drag');
+	});
+	hd.addEventListener('pointermove', e => { if (grab) moveTo(e.clientX - grab.dx, e.clientY - grab.dy); });
+	const drop = () => { grab = null; box.classList.remove('drag'); };
+	hd.addEventListener('pointerup', drop);
+	hd.addEventListener('pointercancel', drop);
 }
 const labHash = () => { if (CFG.labOpen || location.hash === '#spooky-lab') lab(); };
 on(window, 'hashchange', labHash);
