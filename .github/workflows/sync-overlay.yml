@@ -1,0 +1,41 @@
+# This repo holds the one real tt-halloween.js. Whenever it changes on master, copy it into the repos that ship a
+# copy of their own (the Vencord plugin and the browser extension) and commit it there.
+#
+# Needs the secret SYNC_TOKEN: a fine-grained GitHub token with "Contents: Read and write" on the target repos.
+name: Sync overlay
+
+on:
+  push:
+    branches: [master]
+    paths: [tt-halloween.js]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repo: RNDev666/halloweenOverlay
+            file: tt-halloween.js
+          - repo: RNDev666/halloween-overlay-extension
+            file: src/tt-halloween.js
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: source
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ matrix.repo }}
+          token: ${{ secrets.SYNC_TOKEN }}
+          path: target
+      - name: Copy and commit
+        working-directory: target
+        run: |
+          cp ../source/tt-halloween.js "${{ matrix.file }}"
+          if git diff --quiet; then echo "Already up to date"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Sync tt-halloween.js from halloween-overlay@${GITHUB_SHA::7}"
+          git push
